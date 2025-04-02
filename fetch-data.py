@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import gurobipy as GRB
 
+
 def fetch(ticker='VGLT', start_date = "2005-01-01", end_date = "2025-03-27"):
     data = yf.download(ticker, start=start_date, end=end_date)
 
