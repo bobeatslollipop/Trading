@@ -101,7 +101,7 @@ def visualize_ticker(data: pd.DataFrame, ticker: str, risk_adjusted=True, start_
     plt.show()
 
 
-def visualize_correlation(ticker1='^GSPC', ticker2='VGLT', start_date='20010-01-01', end_date='2025-03-27'):
+def visualize_correlation(ticker1='^GSPC', ticker2='VGLT', start_date='2010-01-01', end_date='2025-03-27'):
     data1 = fetch_ticker(ticker1)
     data2 = fetch_ticker(ticker2)
     data1 = data1.loc[data2.index[0]:]
@@ -124,7 +124,7 @@ def visualize_correlation(ticker1='^GSPC', ticker2='VGLT', start_date='20010-01-
     plt.show()
 
 
-# visualize_correlation('^GSPC', 'BRK-b')
+visualize_correlation('SPY', 'UBER')
 # ticker = 'VWO'
 # visualize_ticker(fetch_ticker(ticker), ticker, risk_adjusted=False)
 
