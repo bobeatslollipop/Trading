@@ -124,7 +124,7 @@ def visualize_correlation(ticker1='^GSPC', ticker2='VGLT', start_date='2010-01-0
     plt.show()
 
 
-visualize_correlation('SPY', 'UBER')
+visualize_correlation('SPY', 'SHLD')
 # ticker = 'VWO'
 # visualize_ticker(fetch_ticker(ticker), ticker, risk_adjusted=False)
 
