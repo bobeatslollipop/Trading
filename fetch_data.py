@@ -2,8 +2,7 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 import gurobipy as GRB
-import pandas_datareader.data as web
-
+from datetime import datetime
 
 def process(data: pd.DataFrame):
     data.index = pd.to_datetime(data.index)
@@ -26,18 +25,22 @@ def fetch(ticker='VGLT', start_date="2005-01-01", end_date="2024-12-31"):
     print(f"Data successfully saved to {ticker}.csv")
 
 
+def fetch_ticker(ticker: str, start_date = "2005-01-01", end_date = datetime.today().strftime('%Y-%m-%d')):
+    data = yf.download(ticker, start=start_date, end=end_date)
+    data['Daily_Average'] = data[['Open', 'High', 'Low', 'Close']].mean(axis=1)
+    data = data[['Daily_Average']]
+    data = data.iloc[2:]
+    data.index = pd.to_datetime(data.index)
+    return data
+
+def load_ticker(ticker: str):
+    return pd.read_csv(f'data/{ticker}.csv', index_col=0, parse_dates=True)
+
 # IR = pd.read_csv('data/DTB3.csv', index_col=0)
 # IR = process(IR)
 # IR.to_csv(f'data/DTB3.csv', index=True)
 
-# ticker_list = ['SPY', 'QQQ', 'VGLT', 'GLD', 'XLU', 'IYR', 'LQD', 'IYH', 'SVXY', 'VXX', 'JAAA']
-# for ticker in ticker_list:
-#     try:
-#         fetch(ticker)
-#     except Exception as e:
-#         print(f"Failed to fetch data for {ticker}: {e}")
 
-# fetch('UEC')
 
 # # Fetch VIX data from FRED
 # vix_data = web.DataReader('VIXCLS', 'fred', start_date, end_date)
@@ -61,8 +64,25 @@ def fetch(ticker='VGLT', start_date="2005-01-01", end_date="2024-12-31"):
 #
 # df.to_csv(f'data/VIX_futures.csv', index=True)
 
+
+# # change DTB3 into cumulative growth form.
+# data = load_ticker('DTB3')
+# data['DTB3_cumulative'] = data['DTB3']
+# data.iat[0, 1] = 100
+# for i in range(1, len(data)):
+#     calendar_days = (data.index[i] - data.index[i-1]).days
+#     data.iat[i, 1] = data.iat[i-1, 1] * (1 + data.iat[i-1, 0] / 100 * calendar_days / 365)
+#
+# data['DTB3_cumulative'].to_csv('data/DTB3_cumulative.csv')
+
 if __name__ == "__main__":
     start_date = '2005-01-01'
     end_date = '2019-01-01'
 
+    # ticker_list = ['SPY', 'VGLT', 'GLD']
+    # for ticker in ticker_list:
+    #     try:
+    #         fetch(ticker, start_date=start_date, end_date=end_date)
+    #     except Exception as e:
+    #         print(f"Failed to fetch data for {ticker}: {e}")
 

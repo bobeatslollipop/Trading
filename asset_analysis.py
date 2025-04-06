@@ -4,26 +4,18 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import gurobipy as GRB
+from fetch_data import fetch_ticker, load_ticker
 
 ##################################################
 # Understanding data. 
 ##################################################
 
-def fetch_ticker(ticker: str, start_date = "2005-01-01", end_date = datetime.today().strftime('%Y-%m-%d')):
-    data = yf.download(ticker, start=start_date, end=end_date)
-    data['Daily_Average'] = data[['Open', 'High', 'Low', 'Close']].mean(axis=1)
-    data = data[['Daily_Average']]
-    data = data.iloc[2:]
-    data.index = pd.to_datetime(data.index)
-    return data
 
-def load_ticker(ticker: str):
-    return pd.read_csv(f'data/{ticker}.csv', index_col=0, parse_dates=True)
 """
 Given dataframe with shape (num_days, 1), calculate the daily changes (np.ndarray), mean daily change, and std of daily changes. 
 Output: 3-tuple (daily_changes, daily_changes_mean, daily_changes_std). 
 """
-def calculate_daily_changes(data: pd.DataFrame, risk_adjusted=True):
+def calculate_daily_changes(data: pd.DataFrame, risk_adjusted=False):
     # Risk-free rate
     if risk_adjusted:
         IR = pd.read_csv('data/DTB3.csv', index_col=0, parse_dates=True).sort_index()
@@ -41,7 +33,11 @@ def calculate_daily_changes(data: pd.DataFrame, risk_adjusted=True):
     for i in range(1, len(data)):
         price_today = data.iat[i, 0]
         price_yesterday = data.iat[i - 1, 0]
-        log_return = np.log(price_today / price_yesterday) * 100 # log of daily multiplicative change
+        if abs(price_today / price_yesterday - 1) < 0.0001:
+            log_return = np.log(price_today / price_yesterday) * 100 # log of daily multiplicative change
+        else:
+            log_return = (price_today - price_yesterday) / price_yesterday * 100
+
         daily_changes.append(log_return)
 
         if risk_adjusted:
@@ -102,10 +98,18 @@ def visualize_ticker(data: pd.DataFrame, ticker: str, risk_adjusted=True, start_
 
 
 def visualize_correlation(ticker1='^GSPC', ticker2='VGLT', start_date='2010-01-01', end_date='2025-03-27'):
-    data1 = fetch_ticker(ticker1)
-    data2 = fetch_ticker(ticker2)
-    data1 = data1.loc[data2.index[0]:]
-    data2 = data2.loc[data1.index[0]:]
+    try:
+        data1 = load_ticker(ticker1)
+    except FileNotFoundError:
+        data1 = fetch_ticker(ticker1)
+    try:
+        data2 = load_ticker(ticker2)
+    except FileNotFoundError:
+        data2 = fetch_ticker(ticker2)
+
+    common_dates = data1.index.intersection(data2.index)
+    data1 = data1.loc[common_dates]
+    data2 = data2.loc[common_dates]
 
     ticker1_daily_change, ticker1_daily_change_mean, ticker1_daily_change_std = calculate_daily_changes(data1)
     ticker2_daily_change, ticker2_daily_change_mean, ticker2_daily_change_std = calculate_daily_changes(data2)
@@ -124,8 +128,8 @@ def visualize_correlation(ticker1='^GSPC', ticker2='VGLT', start_date='2010-01-0
     plt.show()
 
 
-visualize_correlation('SPY', 'SHLD')
-# ticker = 'VWO'
-# visualize_ticker(fetch_ticker(ticker), ticker, risk_adjusted=False)
+visualize_correlation('DTB3_cumulative', 'TLT')
+# ticker = 'VGLT'
+# visualize_ticker(load_ticker(ticker), ticker, risk_adjusted=False)
 
 
